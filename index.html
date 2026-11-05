@@ -4,11 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#090d18" />
+    <meta name="description" content="Rally is a free arcade Pong game. Play solo, challenge a friend, or take the match online." />
     <title>Rally — Pong</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
+    <script src="supabase-config.js" onerror="this.remove()"></script>
     <script src="game.js" defer></script>
   </head>
   <body>
@@ -18,7 +20,10 @@
           <span class="wordmark-icon" aria-hidden="true">R</span>
           <span>RALLY<span class="wordmark-period">.</span></span>
         </a>
-        <div class="topbar-tag"><span class="live-dot"></span> ARCADE CLASSIC</div>
+        <div class="topbar-actions">
+          <span class="topbar-tag"><span class="live-dot"></span> ARCADE CLASSIC</span>
+          <button class="icon-button" id="settings-button" type="button" aria-label="Open settings" title="Settings">⚙</button>
+        </div>
       </header>
 
       <section class="intro" aria-labelledby="page-title">
@@ -28,60 +33,131 @@
       </section>
 
       <section class="game-card" aria-label="Pong game">
+        <div class="game-toolbar">
+          <label class="toolbar-field">GAME MODE
+            <select id="mode-select">
+              <option value="classic">Classic vs CPU</option>
+              <option value="two-player">Local 2-player</option>
+              <option value="tournament">CPU tournament</option>
+              <option value="time-attack">Time attack · 2 min</option>
+              <option value="endless">Endless rally</option>
+              <option value="online">Online multiplayer</option>
+            </select>
+          </label>
+          <label class="toolbar-field" id="difficulty-field">CPU LEVEL
+            <select id="difficulty-select">
+              <option value="easy">Easy</option>
+              <option value="normal" selected>Normal</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
+          <label class="toolbar-field">YOUR NAME
+            <input id="player-name" type="text" maxlength="16" autocomplete="nickname" value="PLAYER 1" />
+          </label>
+          <button class="share-button" id="share-button" type="button">SHARE MATCH <span aria-hidden="true">↗</span></button>
+        </div>
+
+        <section class="online-panel is-hidden" id="online-panel" aria-label="Online match">
+          <div class="online-copy"><strong>PLAY ONLINE</strong><span id="online-status">Connect a Supabase project to enable online play and global rankings.</span></div>
+          <div class="online-controls">
+            <button class="small-button" id="host-button" type="button" disabled>CREATE ROOM</button>
+            <input id="room-code" type="text" maxlength="6" placeholder="ROOM CODE" aria-label="Room code" />
+            <button class="small-button" id="join-button" type="button" disabled>JOIN</button>
+          </div>
+        </section>
+
         <div class="scoreboard" aria-live="polite">
           <div class="player-score">
-            <span class="player-label"><span class="player-dot you-dot"></span> YOU</span>
+            <span class="player-label"><span class="player-dot you-dot"></span><span id="left-name">YOU</span></span>
             <span class="score-number" id="player-score">0</span>
           </div>
           <div class="score-divider">
-            <span>FIRST TO 7</span>
+            <span id="score-caption">FIRST TO 7</span>
             <span class="divider-line"></span>
+            <span class="series-score is-hidden" id="series-score">ROUND 1 · 0—0</span>
           </div>
           <div class="player-score opponent-score">
-            <span class="player-label">CPU <span class="player-dot cpu-dot"></span></span>
             <span class="score-number" id="cpu-score">0</span>
+            <span class="player-label"><span id="right-name">CPU</span><span class="player-dot cpu-dot"></span></span>
           </div>
         </div>
 
         <div class="court-wrap">
-          <canvas id="game-canvas" width="960" height="540" aria-label="Pong court. Use W and S or the up and down arrow keys to move your paddle."></canvas>
+          <canvas id="game-canvas" width="960" height="540" aria-label="Pong court. Player one uses W and S; player two uses the up and down arrow keys."></canvas>
           <div class="game-overlay" id="game-overlay">
             <div class="overlay-content">
               <span class="overlay-kicker" id="overlay-kicker">READY WHEN YOU ARE</span>
               <h2 id="overlay-title">Make some<br />noise.</h2>
-              <p id="overlay-copy">First one to 7 takes the match.</p>
+              <p id="overlay-copy">Pick a mode and first to 7 takes the match.</p>
               <button class="primary-button" id="start-button" type="button">
                 <span id="button-label">START GAME</span><span aria-hidden="true">↗</span>
               </button>
+              <div class="serve-picker is-hidden" id="serve-picker" aria-label="Choose who serves">
+                <span>FIRST SERVE</span>
+                <button class="serve-button is-selected" id="serve-left" type="button">YOU</button>
+                <button class="serve-button" id="serve-right" type="button">OPPONENT</button>
+              </div>
             </div>
           </div>
           <div class="pause-indicator" id="pause-indicator" aria-hidden="true">PAUSED</div>
+          <div class="countdown" id="countdown" aria-live="assertive"></div>
+          <div class="powerup-message" id="powerup-message"></div>
+          <div class="between-point-controls is-hidden" id="between-point-controls" aria-label="Choose who serves the next point">
+            <span>NEXT SERVE</span>
+            <button class="serve-button" id="next-serve-left" type="button">YOU</button>
+            <button class="serve-button" id="next-serve-right" type="button">OPPONENT</button>
+          </div>
         </div>
 
         <div class="game-footer">
           <div class="status-label"><span class="status-dot" id="status-dot"></span><span id="game-status">WAITING TO PLAY</span></div>
-          <button class="text-button" id="reset-button" type="button" aria-label="Reset game">RESET <span aria-hidden="true">↺</span></button>
+          <div class="footer-actions">
+            <span class="rally-readout" id="rally-readout"></span>
+            <span class="match-timer" id="match-timer"></span>
+            <button class="text-button" id="reset-button" type="button" aria-label="Reset game">RESET <span aria-hidden="true">↺</span></button>
+          </div>
         </div>
       </section>
 
-      <section class="below-game" aria-label="How to play">
-        <div class="control-group">
-          <span class="section-label">YOUR CONTROLS</span>
-          <div class="key-list">
-            <span class="keycap">W</span><span class="keycap">S</span>
-            <span class="key-separator">or</span>
-            <span class="keycap keycap-wide">↑</span><span class="keycap keycap-wide">↓</span>
-            <span class="control-description">MOVE PADDLE</span>
+      <div class="content-grid">
+        <section class="below-game" aria-label="How to play">
+          <div class="control-group">
+            <span class="section-label">PLAYER 1</span>
+            <div class="key-list">
+              <span class="keycap">W</span><span class="keycap">S</span>
+              <span class="control-description">MOVE PADDLE</span>
+            </div>
           </div>
-        </div>
-        <div class="control-group right-control">
-          <span class="section-label">TAKE A BREATHER</span>
-          <div class="key-list">
-            <span class="keycap keycap-wide">SPACE</span>
-            <span class="control-description">PAUSE / RESUME</span>
+          <div class="control-group">
+            <span class="section-label">PLAYER 2</span>
+            <div class="key-list">
+              <span class="keycap keycap-wide">↑</span><span class="keycap keycap-wide">↓</span>
+              <span class="control-description">MOVE PADDLE</span>
+            </div>
           </div>
-        </div>
-        <p class="mobile-hint">On a phone? Touch and drag on your side of the court.</p>
+          <div class="control-group">
+            <span class="section-label">TAKE A BREATHER</span>
+            <div class="key-list">
+              <span class="keycap keycap-wide">SPACE</span>
+              <span class="control-description">PAUSE / RESUME</span>
+            </div>
+          </div>
+          <p class="mobile-hint">On a phone? Touch and drag on your side of the court.</p>
+        </section>
+
+        <aside class="history-card" aria-label="Personal records and recent games">
+          <div class="history-heading"><span class="section-label">YOUR ARCADE</span><span class="record-badge">PERSONAL</span></div>
+          <div class="record-row"><span>BEST SCORE</span><strong id="high-score">0</strong></div>
+          <div class="record-row"><span>LONGEST RALLY</span><strong id="best-rally">0</strong></div>
+          <div class="history-heading recent-heading"><span class="section-label">RECENT MATCHES</span><button class="text-button" id="clear-history" type="button">CLEAR</button></div>
+          <ol class="history-list" id="match-history"><li class="empty-history">Play a match to start your history.</li></ol>
+        </aside>
+      </div>
+
+      <section class="leaderboard-card">
+        <div class="leaderboard-heading"><div><span class="section-label">THE GLOBAL COURT</span><h2>Leaderboard</h2></div><span class="online-badge"><span class="status-dot"></span> ONLINE</span></div>
+        <p class="leaderboard-note" id="leaderboard-note">Connect a Supabase project to sign in anonymously and compare scores with players worldwide.</p>
+        <ol class="leaderboard-list" id="leaderboard-list"><li class="empty-history">Global rankings appear here when online play is configured.</li></ol>
       </section>
 
       <footer class="page-footer">
@@ -89,5 +165,16 @@
         <span>NO REFEREE. NO MERCY.</span>
       </footer>
     </main>
+
+    <dialog class="settings-dialog" id="settings-dialog">
+      <form method="dialog" class="settings-form">
+        <div class="dialog-heading"><div><span class="section-label">MAKE IT YOURS</span><h2>Game settings</h2></div><button class="icon-button close-button" aria-label="Close settings">×</button></div>
+        <label class="setting-row"><span><strong>Sound effects</strong><small>Hits, points, and power-ups</small></span><input id="sound-toggle" type="checkbox" checked /></label>
+        <label class="setting-row"><span><strong>Background music</strong><small>A quiet arcade loop</small></span><input id="music-toggle" type="checkbox" /></label>
+        <label class="setting-row"><span><strong>Visual effects</strong><small>Ball trails and impact sparks</small></span><input id="effects-toggle" type="checkbox" checked /></label>
+        <label class="setting-row"><span><strong>Power-ups</strong><small>Random boosts during rallies</small></span><input id="powerups-toggle" type="checkbox" checked /></label>
+        <button class="primary-button dialog-done" type="submit">DONE</button>
+      </form>
+    </dialog>
   </body>
 </html>
