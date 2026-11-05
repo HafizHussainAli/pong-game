@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#090d18" />
+    <title>Rally — Pong</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <script src="game.js" defer></script>
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="topbar">
+        <a class="wordmark" href="#" aria-label="Rally home">
+          <span class="wordmark-icon" aria-hidden="true">R</span>
+          <span>RALLY<span class="wordmark-period">.</span></span>
+        </a>
+        <div class="topbar-tag"><span class="live-dot"></span> ARCADE CLASSIC</div>
+      </header>
+
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">THE ORIGINAL HEAD-TO-HEAD</p>
+        <h1 id="page-title">One paddle.<br /><span>One more point.</span></h1>
+        <p class="intro-copy">A little friendly competition never hurt.</p>
+      </section>
+
+      <section class="game-card" aria-label="Pong game">
+        <div class="scoreboard" aria-live="polite">
+          <div class="player-score">
+            <span class="player-label"><span class="player-dot you-dot"></span> YOU</span>
+            <span class="score-number" id="player-score">0</span>
+          </div>
+          <div class="score-divider">
+            <span>FIRST TO 7</span>
+            <span class="divider-line"></span>
+          </div>
+          <div class="player-score opponent-score">
+            <span class="player-label">CPU <span class="player-dot cpu-dot"></span></span>
+            <span class="score-number" id="cpu-score">0</span>
+          </div>
+        </div>
+
+        <div class="court-wrap">
+          <canvas id="game-canvas" width="960" height="540" aria-label="Pong court. Use W and S or the up and down arrow keys to move your paddle."></canvas>
+          <div class="game-overlay" id="game-overlay">
+            <div class="overlay-content">
+              <span class="overlay-kicker" id="overlay-kicker">READY WHEN YOU ARE</span>
+              <h2 id="overlay-title">Make some<br />noise.</h2>
+              <p id="overlay-copy">First one to 7 takes the match.</p>
+              <button class="primary-button" id="start-button" type="button">
+                <span id="button-label">START GAME</span><span aria-hidden="true">↗</span>
+              </button>
+            </div>
+          </div>
+          <div class="pause-indicator" id="pause-indicator" aria-hidden="true">PAUSED</div>
+        </div>
+
+        <div class="game-footer">
+          <div class="status-label"><span class="status-dot" id="status-dot"></span><span id="game-status">WAITING TO PLAY</span></div>
+          <button class="text-button" id="reset-button" type="button" aria-label="Reset game">RESET <span aria-hidden="true">↺</span></button>
+        </div>
+      </section>
+
+      <section class="below-game" aria-label="How to play">
+        <div class="control-group">
+          <span class="section-label">YOUR CONTROLS</span>
+          <div class="key-list">
+            <span class="keycap">W</span><span class="keycap">S</span>
+            <span class="key-separator">or</span>
+            <span class="keycap keycap-wide">↑</span><span class="keycap keycap-wide">↓</span>
+            <span class="control-description">MOVE PADDLE</span>
+          </div>
+        </div>
+        <div class="control-group right-control">
+          <span class="section-label">TAKE A BREATHER</span>
+          <div class="key-list">
+            <span class="keycap keycap-wide">SPACE</span>
+            <span class="control-description">PAUSE / RESUME</span>
+          </div>
+        </div>
+        <p class="mobile-hint">On a phone? Touch and drag on your side of the court.</p>
+      </section>
+
+      <footer class="page-footer">
+        <span>BUILT FOR THE LOVE OF THE GAME</span>
+        <span>NO REFEREE. NO MERCY.</span>
+      </footer>
+    </main>
+  </body>
+</html>
